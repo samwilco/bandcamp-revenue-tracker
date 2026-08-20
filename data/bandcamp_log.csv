@@ -2,3 +2,5 @@ row_type,iso_utc,utc_date,window_start,window_end,sales_count,gross_usd,top_coun
 sales,2026-08-20T19:26:50Z,1787254010.484,1787253360.000,1787253960.000,506,3517.31,United States,EUR,,,,
 banner,2026-08-20T19:26:50Z,1787254010.484,,,,,,,1780000000,77397,"Fans have paid artists $1.78 billion using Bandcamp, and yesterday alone bought 77,397 records.",
 sales,2026-08-20T19:26:51Z,1787254011.558,,,0,0.00,,,,,,no new data in feed yet
+gap,2026-08-20T21:13:25Z,1787260405.053,1787253960.000,1787259780.000,,,,,,,,MISSED 5820 seconds - not recoverable (feed only keeps 10 min)
+sales,2026-08-20T21:13:25Z,1787260405.053,1787259780.000,1787260380.000,506,3233.03,United States,EUR,,,,
