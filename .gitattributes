@@ -1,0 +1,9 @@
+# Keep Linux line endings for files GitHub Actions executes on Linux runners.
+# Without this, editing on Windows can commit CRLF and break the workflow shell.
+*.yml text eol=lf
+*.yaml text eol=lf
+*.py text eol=lf
+*.md text eol=lf
+
+# Never let git mangle compressed data
+*.gz binary
