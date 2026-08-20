@@ -1,0 +1,4 @@
+row_type,iso_utc,utc_date,window_start,window_end,sales_count,gross_usd,top_country,top_currency,alltime_usd,records_yesterday,banner_text,note
+sales,2026-08-20T19:26:50Z,1787254010.484,1787253360.000,1787253960.000,506,3517.31,United States,EUR,,,,
+banner,2026-08-20T19:26:50Z,1787254010.484,,,,,,,1780000000,77397,"Fans have paid artists $1.78 billion using Bandcamp, and yesterday alone bought 77,397 records.",
+sales,2026-08-20T19:26:51Z,1787254011.558,,,0,0.00,,,,,,no new data in feed yet
