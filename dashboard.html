@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bandcamp platform revenue</title>
+<style>
+:root{
+  color-scheme: light;
+  --page:#f9f9f7; --surface-1:#fcfcfb;
+  --text-primary:#0b0b0b; --text-secondary:#52514e; --muted:#898781;
+  --grid:#e1e0d9; --axis:#c3c2b7;
+  --series-1:#2a78d6; --series-2:#eb6834;
+  --good:#006300; --bad:#d03b3b;
+  --border:rgba(11,11,11,0.10);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme: dark;
+    --page:#0d0d0d; --surface-1:#1a1a19;
+    --text-primary:#ffffff; --text-secondary:#c3c2b7; --muted:#898781;
+    --grid:#2c2c2a; --axis:#383835;
+    --series-1:#3987e5; --series-2:#d95926;
+    --good:#0ca30c; --bad:#d03b3b;
+    --border:rgba(255,255,255,0.10);
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme: dark;
+  --page:#0d0d0d; --surface-1:#1a1a19;
+  --text-primary:#ffffff; --text-secondary:#c3c2b7; --muted:#898781;
+  --grid:#2c2c2a; --axis:#383835;
+  --series-1:#3987e5; --series-2:#d95926;
+  --good:#0ca30c; --bad:#d03b3b;
+  --border:rgba(255,255,255,0.10);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--page);color:var(--text-primary);
+  font:15px/1.5 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  -webkit-font-smoothing:antialiased}
+.wrap{max-width:1080px;margin:0 auto;padding:32px 20px 64px}
+header h1{margin:0 0 6px;font-size:26px;letter-spacing:-0.02em}
+.meta{margin:0;color:var(--text-secondary);font-size:13.5px}
+h2{margin:0 0 14px;font-size:15px;font-weight:600;letter-spacing:-0.01em}
+.notice{margin:20px 0 0;padding:12px 14px;border:1px solid var(--border);
+  border-left:3px solid var(--series-2);border-radius:8px;
+  background:var(--surface-1);color:var(--text-secondary);font-size:13.5px}
+.notice.alarm{border-left-color:var(--bad)}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin:20px 0 0}
+.tile,.panel,.card{background:var(--surface-1);border:1px solid var(--border);border-radius:10px}
+.tile{padding:14px 16px}
+.label{color:var(--text-secondary);font-size:12px;font-weight:500;
+  text-transform:uppercase;letter-spacing:0.05em}
+.big{font-size:27px;font-weight:650;letter-spacing:-0.025em;margin:6px 0 2px;
+  font-variant-numeric:tabular-nums}
+.sub{color:var(--text-secondary);font-size:12.5px;font-variant-numeric:tabular-nums}
+.panel{padding:18px 18px 20px;margin:20px 0 0}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.card{padding:14px 16px;background:transparent}
+.card .value{font-size:23px;font-weight:650;letter-spacing:-0.02em;margin:6px 0 4px;
+  font-variant-numeric:tabular-nums}
+.card .value.muted{font-size:15px;font-weight:500;color:var(--muted);letter-spacing:0}
+.card.pending{border-style:dashed}
+.delta{font-size:13px;margin-bottom:6px;font-variant-numeric:tabular-nums}
+.delta .up{color:var(--good);font-weight:600}
+.delta .down{color:var(--bad);font-weight:600}
+.delta .flat{color:var(--text-secondary);font-weight:600}
+.delta .vs{color:var(--text-secondary)}
+.legend{display:flex;flex-wrap:wrap;gap:16px;margin:0 0 12px;
+  font-size:12.5px;color:var(--text-secondary)}
+.key{display:inline-flex;align-items:center;gap:6px}
+.key i{width:11px;height:11px;border-radius:3px;display:inline-block}
+.key .hatchkey{background:repeating-linear-gradient(45deg,var(--muted) 0 2px,transparent 2px 5px);
+  border:1px solid var(--border)}
+.scroll{overflow-x:auto}
+.chart{display:block;max-width:100%;height:auto}
+.chart .ax{fill:var(--muted);font-size:11px}
+.chart .ax.partial{font-size:9.5px;font-style:italic}
+.chart .val{fill:var(--text-secondary);font-size:11px;font-weight:600;
+  font-variant-numeric:tabular-nums}
+.bar{cursor:default}
+.bar:hover,.bar:focus{opacity:0.82;outline:none}
+table{border-collapse:collapse;width:100%;font-size:13px;
+  font-variant-numeric:tabular-nums;margin-top:12px}
+th,td{text-align:right;padding:7px 10px;border-bottom:1px solid var(--border);
+  white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+th{color:var(--text-secondary);font-weight:600;font-size:11.5px;
+  text-transform:uppercase;letter-spacing:0.04em}
+.partial-row td{color:var(--muted);font-style:italic}
+summary{cursor:pointer;font-size:14px;font-weight:600}
+.foot{margin:24px 0 0;color:var(--text-secondary);font-size:12.5px;line-height:1.65}
+.foot code{background:var(--surface-1);padding:1px 5px;border-radius:4px;
+  border:1px solid var(--border);font-size:12px}
+.empty{color:var(--muted)}
+#tip{position:fixed;pointer-events:none;opacity:0;transition:opacity .1s;
+  background:var(--text-primary);color:var(--page);padding:7px 10px;border-radius:6px;
+  font-size:12px;max-width:300px;z-index:9;font-variant-numeric:tabular-nums}
+#tip.on{opacity:1}
+#themer{position:absolute;top:32px;right:20px;background:var(--surface-1);
+  border:1px solid var(--border);color:var(--text-secondary);border-radius:7px;
+  padding:6px 11px;font-size:12px;cursor:pointer}
+</style>
+</head>
+<body>
+<button id="themer" type="button">Light / dark</button>
+<div class='wrap'><header><h1>Bandcamp platform revenue</h1><p class='meta'>20 Aug 2026 19:16 UTC &rarr; 21 Aug 2026 15:01 UTC &middot; 13,155 sales collected &middot; 25% of the period observed &middot; 0 complete days</p></header><div class='notice alarm'><strong>These totals are undercounts.</strong> Only <strong>25%</strong> of the period was actually observed, because the collector is running roughly every 35 minutes instead of every 5, and Bandcamp's feed only holds 10 minutes at a time. Everything below counts <em>observed</em> sales only &mdash; real platform totals are roughly <strong>4.0&times;</strong> these figures. Fixing the collection frequency fixes this.</div><div class='notice'><strong>Still filling up.</strong> 7-day comparisons need 14 complete days; 30-day comparisons need 60. You have <strong>0</strong>. Panels below show what is missing rather than a number calculated from a partial day.</div><section class='tiles'><div class='tile'><div class='label'>Fan spend collected</div><div class='big'>$92k</div><div class='sub'>13,155 sales</div></div><div class='tile'><div class='label'>Bandcamp's estimated cut</div><div class='big'>$9.2k&#8202;–&#8202;$12k</div><div class='sub'>take rate 10.0%&#8202;–&#8202;12.9%</div></div><div class='tile'><div class='label'>Digital</div><div class='big'>$53k</div><div class='sub'>11,481 sales &middot; take 10.0%&#8202;–&#8202;15.0%</div></div><div class='tile'><div class='label'>Physical</div><div class='big'>$38k</div><div class='sub'>1,674 sales &middot; take 10.0%</div></div></section><section class='panel'><h2>Fan spend per day</h2><div class='legend'><span class='key'><i style='background:var(--series-1)'></i>Digital</span><span class='key'><i style='background:var(--series-2)'></i>Physical</span><span class='key'><i class='hatchkey'></i>Partial day — excluded from averages</span></div><div class='scroll'><svg viewBox='0 0 270 302' width='270' height='302' role='img' aria-label='Daily fan spend, split by digital and physical' class='chart'><defs><pattern id='hatch' width='6' height='6' patternTransform='rotate(45)' patternUnits='userSpaceOnUse'><rect width='6' height='6' fill='var(--surface-1)' opacity='0.55'/><line x1='0' y1='0' x2='0' y2='6' stroke='var(--muted)' stroke-width='2.5'/></pattern></defs><line x1='62.0' y1='256.0' x2='254.0' y2='256.0' stroke='var(--grid)' stroke-width='1'/><text x='52.0' y='260.0' class='ax' text-anchor='end'>$0</text><line x1='62.0' y1='196.0' x2='254.0' y2='196.0' stroke='var(--grid)' stroke-width='1'/><text x='52.0' y='200.0' class='ax' text-anchor='end'>$19k</text><line x1='62.0' y1='136.0' x2='254.0' y2='136.0' stroke='var(--grid)' stroke-width='1'/><text x='52.0' y='140.0' class='ax' text-anchor='end'>$38k</text><line x1='62.0' y1='76.0' x2='254.0' y2='76.0' stroke='var(--grid)' stroke-width='1'/><text x='52.0' y='80.0' class='ax' text-anchor='end'>$56k</text><line x1='62.0' y1='16.0' x2='254.0' y2='16.0' stroke='var(--grid)' stroke-width='1'/><text x='52.0' y='20.0' class='ax' text-anchor='end'>$75k</text><g class='bar' tabindex='0' data-tip="2026-08-20 (PARTIAL) | fan spend $25,021.96 | digital $14,703.66 | physical $10,318.30 | 3,680 sales | 6% of day observed"><path d='M82.00 206.95 L82.00 177.93 Q82.00 173.93 86.00 173.93 L134.00 173.93 Q138.00 173.93 138.00 177.93 L138.00 206.95 Z' fill='var(--series-2)'/><path d='M82.00 206.95 L82.00 177.93 Q82.00 173.93 86.00 173.93 L134.00 173.93 Q138.00 173.93 138.00 177.93 L138.00 206.95 Z' fill='url(#hatch)'/><rect x='82.00' y='208.95' width='56.00' height='47.05' fill='var(--series-1)'/><rect x='82.00' y='208.95' width='56.00' height='47.05' fill='url(#hatch)'/></g><text x='110.0' y='165.9' class='val' text-anchor='middle'>$25k</text><text x='110.0' y='274.0' class='ax' text-anchor='middle'>08-20</text><text x='110.0' y='288.0' class='ax partial' text-anchor='middle'>partial</text><g class='bar' tabindex='0' data-tip="2026-08-21 (PARTIAL) | fan spend $66,915.41 | digital $38,750.51 | physical $28,164.90 | 9,475 sales | 15% of day observed"><path d='M178.00 130.00 L178.00 43.87 Q178.00 39.87 182.00 39.87 L230.00 39.87 Q234.00 39.87 234.00 43.87 L234.00 130.00 Z' fill='var(--series-2)'/><path d='M178.00 130.00 L178.00 43.87 Q178.00 39.87 182.00 39.87 L230.00 39.87 Q234.00 39.87 234.00 43.87 L234.00 130.00 Z' fill='url(#hatch)'/><rect x='178.00' y='132.00' width='56.00' height='124.00' fill='var(--series-1)'/><rect x='178.00' y='132.00' width='56.00' height='124.00' fill='url(#hatch)'/></g><text x='206.0' y='31.9' class='val' text-anchor='middle'>$67k</text><text x='206.0' y='274.0' class='ax' text-anchor='middle'>08-21</text><text x='206.0' y='288.0' class='ax partial' text-anchor='middle'>partial</text><line x1='62.0' y1='256.0' x2='254.0' y2='256.0' stroke='var(--axis)' stroke-width='1'/></svg></div></section><section class='panel'><h2>Trailing periods &mdash; all media</h2><div class='cards'><div class='card pending'><div class='label'>Trailing 7 days · average per day</div><div class='value muted'>Not enough data yet</div><div class='sub'>No complete days yet (0 of 7 needed). Collection is still part-way through its first day.</div></div><div class='card pending'><div class='label'>Trailing 30 days · total</div><div class='value muted'>Not enough data yet</div><div class='sub'>No complete days yet (0 of 30 needed). Collection is still part-way through its first day.</div></div></div></section><section class='panel'><h2>Trailing periods &mdash; Digital</h2><div class='cards'><div class='card pending'><div class='label'>Trailing 7 days · average per day</div><div class='value muted'>Not enough data yet</div><div class='sub'>No complete days yet (0 of 7 needed). Collection is still part-way through its first day.</div></div><div class='card pending'><div class='label'>Trailing 30 days · total</div><div class='value muted'>Not enough data yet</div><div class='sub'>No complete days yet (0 of 30 needed). Collection is still part-way through its first day.</div></div></div></section><section class='panel'><h2>Trailing periods &mdash; Physical</h2><div class='cards'><div class='card pending'><div class='label'>Trailing 7 days · average per day</div><div class='value muted'>Not enough data yet</div><div class='sub'>No complete days yet (0 of 7 needed). Collection is still part-way through its first day.</div></div><div class='card pending'><div class='label'>Trailing 30 days · total</div><div class='value muted'>Not enough data yet</div><div class='sub'>No complete days yet (0 of 30 needed). Collection is still part-way through its first day.</div></div></div></section><section class='panel'><details><summary>Show the numbers as a table</summary><div class='scroll'><table><thead><tr><th>Date</th><th>Fan spend</th><th>Digital</th><th>Physical</th><th>Sales</th><th>Bandcamp cut</th><th>Take rate</th><th>Day observed</th></tr></thead><tbody><tr class='partial-row'><td>2026-08-21</td><td>$66,915.41</td><td>$38,750.51</td><td>$28,164.90</td><td>9,475</td><td>$6.7k&#8202;–&#8202;$8.6k</td><td>10.0%&#8202;–&#8202;12.9%</td><td>15% (partial)</td></tr><tr class='partial-row'><td>2026-08-20</td><td>$25,021.96</td><td>$14,703.66</td><td>$10,318.30</td><td>3,680</td><td>$2.5k&#8202;–&#8202;$3.2k</td><td>10.0%&#8202;–&#8202;12.9%</td><td>6% (partial)</td></tr></tbody></table></div></details></section><div class="foot">
+<p><strong>How these figures are worked out.</strong>
+&ldquo;Fan spend&rdquo; is what fans actually paid, taken straight from Bandcamp's
+public sales feed. &ldquo;Bandcamp's cut&rdquo; is an <em>estimate</em> shown as a
+range, using Bandcamp's published rates: <strong>15% on digital</strong>, falling to
+<strong>10%</strong> once an artist passes $5,000 in cumulative sales, and
+<strong>10% on physical goods</strong>. The revenue share applies only to the first
+$100 of any single item.</p>
+<p>The range exists for an honest reason: the feed does not reveal which artists have
+passed the $5,000 threshold, so the true digital rate is genuinely unknown between 10%
+and 15%. The low end assumes every artist is above it; the high end assumes none are.</p>
+<p><strong>Two known biases, stated rather than hidden.</strong> Physical take rate is
+slightly <em>overstated</em>, because the feed bundles shipping and tax into the amount
+paid while Bandcamp excludes them from its 10%. And payment processing fees (4&ndash;6%)
+are <em>not</em> counted here, because they go to the payment processor rather than to
+Bandcamp.</p>
+<p>Media type comes from the feed's own item code: packages
+(<code>p</code>&nbsp;&mdash; vinyl, CDs, merch) count as physical; tracks, albums and
+discographies count as digital.</p>
+<p>Days marked <em>partial</em> were not observed for a full 24 hours, so they are drawn
+with hatching and left out of every average and comparison &mdash; a partial day must
+never be mistaken for a fall in sales.</p>
+</div></div><div id='tip' role='status'></div><script>
+(function(){
+  var tip=document.getElementById('tip');
+  function show(e,t){tip.textContent=t;tip.classList.add('on');
+    var x=e.clientX+14,y=e.clientY+14;
+    if(x+tip.offsetWidth>innerWidth-8)x=e.clientX-tip.offsetWidth-14;
+    if(y+tip.offsetHeight>innerHeight-8)y=e.clientY-tip.offsetHeight-14;
+    tip.style.left=x+'px';tip.style.top=y+'px';}
+  function hide(){tip.classList.remove('on');}
+  document.querySelectorAll('.bar').forEach(function(el){
+    var t=(el.getAttribute('data-tip')||'').split('|').join(' \u00b7 ');
+    el.addEventListener('mousemove',function(e){show(e,t);});
+    el.addEventListener('mouseleave',hide);
+    el.addEventListener('focus',function(){
+      var r=el.getBoundingClientRect();
+      show({clientX:r.left+r.width/2,clientY:r.top},t);});
+    el.addEventListener('blur',hide);
+  });
+  var b=document.getElementById('themer');
+  b.addEventListener('click',function(){
+    var cur=document.documentElement.getAttribute('data-theme');
+    var dark=cur?cur==='dark':matchMedia('(prefers-color-scheme: dark)').matches;
+    document.documentElement.setAttribute('data-theme',dark?'light':'dark');
+  });
+})();
+</script>
+</body>
+</html>

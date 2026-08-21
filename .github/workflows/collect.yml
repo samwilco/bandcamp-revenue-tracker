@@ -37,6 +37,10 @@ jobs:
         id: collect
         run: python collect.py
 
+      - name: Rebuild the dashboard
+        if: always()      # a fresh dashboard is useful even if collection stumbled
+        run: python dashboard.py
+
       - name: Commit and push the updated log
         if: always()          # still save partial results even if collection failed
         run: |
@@ -44,7 +48,7 @@ jobs:
           git config user.name  "bandcamp-tracker-bot"
           git config user.email "actions@github.com"
 
-          git add -A data state.json
+          git add -A data state.json dashboard.html
 
           if git diff --cached --quiet; then
             echo "Nothing new to commit."
