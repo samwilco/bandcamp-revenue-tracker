@@ -1,8 +1,23 @@
 name: Collect Bandcamp sales
 
-# Runs every 5 minutes. This is deliberate, not excessive: Bandcamp's sales feed
-# only ever returns the most recent 10 minutes of activity, so anything slower
-# than that permanently loses sales. Hourly would miss roughly 83% of them.
+# WHY THIS RUNS THE WAY IT DOES
+#
+# Bandcamp's sales feed only holds the most recent 10 minutes. Anything we do not
+# collect inside that window is gone permanently -- there is no archive to catch up
+# from.
+#
+# We originally asked GitHub to start a run every 5 minutes. In practice GitHub
+# coalesced that down to roughly one run every 34 minutes, so we were seeing about
+# 10 minutes in every 34 and capturing only ~25% of all sales.
+#
+# The fix is to stop relying on GitHub's punctuality. Each run now STAYS ALIVE and
+# polls every 4 minutes for up to 50 minutes. Because the schedule keeps firing, a
+# replacement run sits queued behind the current one (concurrency lets one run and
+# one wait), so as soon as a run ends the next begins. Coverage becomes effectively
+# continuous rather than a 10-minute sample.
+#
+# This is free: GitHub Actions is unlimited for public repositories.
+
 on:
   schedule:
     - cron: "*/5 * * * *"
@@ -11,8 +26,8 @@ on:
 permissions:
   contents: write            # needed to commit the updated log back to the repo
 
-# Never let two runs write to the repo at the same time -- that would cause
-# push conflicts. A queued run waits for the one in front of it.
+# One run at a time, with one allowed to queue behind it. That queued run is what
+# gives us continuous coverage, so cancel-in-progress must stay false.
 concurrency:
   group: collect
   cancel-in-progress: false
@@ -20,7 +35,11 @@ concurrency:
 jobs:
   collect:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 60      # must comfortably exceed RUN_SECONDS below
+
+    env:
+      RUN_SECONDS: 3000      # keep polling for 50 minutes
+      POLL_SECONDS: 240      # every 4 minutes, well inside the feed's 10-minute window
 
     steps:
       - name: Get the repository
@@ -31,43 +50,52 @@ jobs:
         with:
           python-version: "3.12"
 
-      # The script uses only Python's standard library, so there is nothing
-      # to install -- which also means there are no dependencies to break.
-      - name: Collect sales and banner
-        id: collect
-        run: python collect.py
-
-      - name: Rebuild the dashboard
-        if: always()      # a fresh dashboard is useful even if collection stumbled
-        run: python dashboard.py
-
-      - name: Commit and push the updated log
-        if: always()          # still save partial results even if collection failed
+      # The scripts use only Python's standard library, so there is nothing to
+      # install -- which also means there are no dependencies to break.
+      - name: Collect continuously, saving as we go
         run: |
-          set -euo pipefail
+          set -uo pipefail
           git config user.name  "bandcamp-tracker-bot"
           git config user.email "actions@github.com"
 
-          git add -A data state.json dashboard.html
-
-          if git diff --cached --quiet; then
-            echo "Nothing new to commit."
-            exit 0
-          fi
-
-          git commit -m "data: collected $(date -u '+%Y-%m-%d %H:%M UTC')"
-
-          # Another run may have pushed while we were working. Rebase onto it and
-          # retry rather than failing, so a busy moment never costs us a commit.
-          for attempt in 1 2 3 4 5; do
-            if git push; then
-              echo "Pushed on attempt $attempt."
-              exit 0
+          save () {
+            git add -A data state.json dashboard.html 2>/dev/null || true
+            if git diff --cached --quiet; then
+              return 0                      # nothing new this cycle
             fi
-            echo "Push rejected (attempt $attempt); rebasing onto latest and retrying..."
-            git pull --rebase --autostash origin "${GITHUB_REF_NAME}"
-            sleep $((attempt * 3))
+            git commit -q -m "data: collected $(date -u '+%Y-%m-%d %H:%M UTC')" || return 0
+            # A queued run may have pushed while we worked. Rebase and retry rather
+            # than failing, so a busy moment never costs us a commit.
+            for attempt in 1 2 3 4 5; do
+              if git push -q; then
+                return 0
+              fi
+              echo "Push rejected (attempt $attempt); rebasing onto latest..."
+              git pull --rebase --autostash -q origin "${GITHUB_REF_NAME}" || true
+              sleep $((attempt * 3))
+            done
+            echo "WARNING: could not push this cycle; the next cycle will retry." >&2
+          }
+
+          END=$(( $(date +%s) + RUN_SECONDS ))
+          cycle=0
+
+          while [ "$(date +%s)" -lt "$END" ]; do
+            cycle=$((cycle + 1))
+            echo "--- cycle $cycle at $(date -u '+%H:%M:%S UTC') ---"
+
+            # A failed poll must never end the run; the next cycle is only 4 minutes
+            # away and the feed still holds 10 minutes, so we can recover from it.
+            python collect.py || echo "collect.py failed this cycle; continuing."
+            save
+
+            REMAIN=$(( END - $(date +%s) ))
+            if [ "$REMAIN" -le 0 ]; then break; fi
+            if [ "$REMAIN" -lt "$POLL_SECONDS" ]; then sleep "$REMAIN"; else sleep "$POLL_SECONDS"; fi
           done
 
-          echo "Could not push after 5 attempts." >&2
-          exit 1
+          echo "--- rebuilding dashboard ---"
+          python dashboard.py || echo "dashboard build failed; data is still safe."
+          save
+
+          echo "Finished $cycle collection cycles."

@@ -37,6 +37,7 @@ data that you don't know about.
 | `data/bandcamp_log.csv` | **The permanent log.** One summary row per run, plus banner readings, plus any gaps or errors. Never rotates. | ~13 MB/year |
 | `data/raw/sales_YYYY-MM.csv.gz` | Every individual sale, one file per month, compressed. | ~60 MB/month |
 | `state.json` | Remembers where collection left off, so nothing is double-counted. | tiny |
+| `dashboard.html` | The dashboard, rebuilt after every run. Double-click to open. | ~15 KB |
 
 ### Why the raw file is compressed
 
@@ -59,6 +60,21 @@ break from file size, even if traffic doubles.
 - `error` / `banner_error` — something went wrong, with the reason
 
 ---
+
+## The dashboard
+
+Open `dashboard.html` (double-click it, or `git pull` first for the newest data).
+It shows fan spend per day, trailing 7- and 30-day windows against the periods before
+them, and an estimated Bandcamp take rate, each split by digital and physical.
+
+Take rate is shown as a **range**, not a single number, because Bandcamp charges 15% on
+digital but 10% once an artist passes $5,000 in sales — and the feed never says which
+artists have. A single figure would be false precision. Physical is a flat 10%, so that
+side of the range is exact, though slightly overstated because the feed bundles shipping
+and tax into the amount paid.
+
+Days that were not observed for a full 24 hours are drawn with hatching and left out of
+every average, so a partial day is never mistaken for a drop in sales.
 
 ## Seeing your numbers
 
@@ -87,8 +103,18 @@ that can break later.
 
 ## The automation
 
-`.github/workflows/collect.yml` runs the collector **every 5 minutes** on GitHub's
+`.github/workflows/collect.yml` keeps the collector running continuously on GitHub's
 servers and commits the results back to this repository.
+
+**Why it works the way it does.** We first asked GitHub to start a run every 5
+minutes. Measured over the first day, GitHub actually started one roughly every **34
+minutes** — it quietly coalesces frequent schedules. Because the feed only holds 10
+minutes, we were seeing 10 minutes in every 34 and capturing just **25%** of sales.
+
+So the collector no longer depends on GitHub being punctual. Each run now stays alive
+and polls every 4 minutes for up to 50 minutes, saving as it goes. The schedule keeps
+firing in the background, so a replacement run waits in the queue and starts the moment
+the current one ends. Coverage is continuous rather than a sample.
 
 Things it handles by itself:
 
@@ -100,10 +126,10 @@ Things it handles by itself:
 
 ### Two honest caveats
 
-- **GitHub's scheduler is not punctual.** It runs jobs on a best-effort basis and is
-  often 5–15 minutes late when GitHub is busy. Since the feed only holds 10 minutes, a
-  long delay does create a gap. Those gaps get logged as `gap` rows. Expect to capture
-  most sales, but not literally every one.
+- **GitHub's scheduler is not punctual**, which is exactly why each run polls for 50
+  minutes instead of checking once. Gaps can still happen if GitHub fails to start any
+  run for a long stretch, and those are logged as `gap` rows. Check the `gap` rows and
+  the dashboard's "% of the period observed" figure to see how well it is keeping up.
 - **Cost:** free and unlimited on a **public** repository. If you make this repo
   **private**, GitHub only gives 2,000 free minutes/month and this uses far more, which
   would cost money. Either keep it public, or tell me and I'll slow the schedule to fit
