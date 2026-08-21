@@ -15,9 +15,10 @@ archive to request.
 
 Two consequences worth understanding:
 
-1. **It has to run every 5 minutes**, not hourly. An hourly schedule would only ever
-   see the last 10 minutes of each hour and would permanently miss about **83% of all
-   sales**.
+1. **It has to poll at least every 10 minutes**, not hourly. An hourly schedule would
+   only ever see the last 10 minutes of each hour and would permanently miss about
+   **83% of all sales**. In practice the collector polls every 4 minutes, continuously
+   — see [The automation](#the-automation) for why that took two attempts to get right.
 
 2. **A missed run cannot be caught up.** If the collector is offline for 20 minutes,
    those sales are gone from Bandcamp's side forever. No amount of retrying recovers
@@ -84,9 +85,11 @@ python daily_totals.py
 
 Prints sales and dollar totals per day. It only reads your data; it never changes it.
 
-A useful accuracy check: our own collected count comes to roughly 70,000 sales/day,
-against the ~77,000/day that Bandcamp publishes on its own homepage. Being within ~10%
-suggests the feed is broadly complete rather than a partial sample.
+A useful accuracy check: measured at full polling rate, the feed implies roughly
+**70,000 sales/day**, against the **~77,000/day** Bandcamp publishes on its own
+homepage. Being within ~10% suggests the feed is broadly complete rather than a partial
+sample. Compare that against your own collected totals to see how much the collector is
+actually keeping up with — the dashboard shows this as "% of the period observed".
 
 ---
 
