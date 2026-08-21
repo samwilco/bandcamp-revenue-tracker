@@ -85,11 +85,16 @@ python daily_totals.py
 
 Prints sales and dollar totals per day. It only reads your data; it never changes it.
 
-A useful accuracy check: measured at full polling rate, the feed implies roughly
-**70,000 sales/day**, against the **~77,000/day** Bandcamp publishes on its own
-homepage. Being within ~10% suggests the feed is broadly complete rather than a partial
-sample. Compare that against your own collected totals to see how much the collector is
-actually keeping up with — the dashboard shows this as "% of the period observed".
+**A note on comparing against Bandcamp's own number.** The homepage publishes a daily
+record count (~77,000/day). It is tempting to check our data against it by extrapolating
+from a few minutes of collection — but don't: sales are heavily uneven across the day,
+and two short samples taken hours apart implied 70,000/day and 102,000/day respectively.
+A 45% spread between them means short-window extrapolation says nothing useful.
+
+Wait for a full complete day, then compare that day's collected total against the banner
+figure. The dashboard marks incomplete days as `partial` precisely so they don't get
+used this way. Note also that Bandcamp's "records" figure may not count merch the way
+our per-item rows do, so expect some genuine difference even at full coverage.
 
 ---
 
