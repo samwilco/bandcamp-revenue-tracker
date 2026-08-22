@@ -119,10 +119,24 @@ minutes. Measured over the first day, GitHub actually started one roughly every 
 minutes** — it quietly coalesces frequent schedules. Because the feed only holds 10
 minutes, we were seeing 10 minutes in every 34 and capturing just **25%** of sales.
 
-So the collector no longer depends on GitHub being punctual. Each run now stays alive
-and polls every 4 minutes for up to 50 minutes, saving as it goes. The schedule keeps
-firing in the background, so a replacement run waits in the queue and starts the moment
-the current one ends. Coverage is continuous rather than a sample.
+So the collector no longer depends on GitHub being punctual. Each run stays alive and
+polls every 4 minutes, saving as it goes.
+
+**That took two attempts.** The first version polled for 50 minutes, assuming a queued
+run would start the moment the previous one ended. Measured over a full day, it did not:
+each run collected for its full 48 minutes and then sat idle for **53 minutes** waiting
+for GitHub to start a successor — a duty cycle of just **48%**.
+
+Since that handoff costs ~53 minutes regardless, the fix is to pay it as rarely as
+possible. Each run now polls for **5h50m**, just under GitHub's 6-hour ceiling for a
+single job, which cuts handoffs from ~14 a day to ~3.6 and lifts the duty cycle to
+roughly **87%**.
+
+Closing the last ~13% would need each run to trigger its own successor through the API.
+GitHub deliberately blocks the built-in token from doing that (workflows cannot
+recursively trigger themselves), so it needs a personal access token saved as a
+repository secret — an opt-in setup step rather than something that works out of the
+box.
 
 Things it handles by itself:
 

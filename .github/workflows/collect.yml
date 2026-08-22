@@ -10,13 +10,23 @@ name: Collect Bandcamp sales
 # coalesced that down to roughly one run every 34 minutes, so we were seeing about
 # 10 minutes in every 34 and capturing only ~25% of all sales.
 #
-# The fix is to stop relying on GitHub's punctuality. Each run now STAYS ALIVE and
-# polls every 4 minutes for up to 50 minutes. Because the schedule keeps firing, a
-# replacement run sits queued behind the current one (concurrency lets one run and
-# one wait), so as soon as a run ends the next begins. Coverage becomes effectively
-# continuous rather than a 10-minute sample.
+# So each run STAYS ALIVE and polls every 4 minutes rather than checking once. That
+# part works exactly as intended.
 #
-# This is free: GitHub Actions is unlimited for public repositories.
+# What did NOT work was assuming a queued run starts the moment the previous one ends.
+# Measured over a full day: each run collected for its full 48 minutes, then sat idle
+# for 53 MINUTES before GitHub started a successor -- a duty cycle of only 48%.
+#
+# Since that handoff costs ~53 minutes no matter what, the answer is to pay it as
+# rarely as possible. Each run now polls for 5h50m, just under GitHub's 6-hour limit
+# for a single job, which lifts the duty cycle from ~48% to roughly 87%.
+#
+# Getting closer to 100% would need the run to trigger its own successor via the API.
+# That is deliberately blocked for the built-in GITHUB_TOKEN (GitHub prevents workflows
+# recursively triggering themselves), so it would require a personal access token
+# stored as a repository secret. That is a setup step for the repo owner to opt into.
+#
+# This is free either way: GitHub Actions is unlimited for public repositories.
 
 on:
   schedule:
@@ -35,10 +45,10 @@ concurrency:
 jobs:
   collect:
     runs-on: ubuntu-latest
-    timeout-minutes: 60      # must comfortably exceed RUN_SECONDS below
+    timeout-minutes: 358     # just under GitHub's 6-hour ceiling for a single job
 
     env:
-      RUN_SECONDS: 3000      # keep polling for 50 minutes
+      RUN_SECONDS: 21000     # keep polling for 5h50m (see note above)
       POLL_SECONDS: 240      # every 4 minutes, well inside the feed's 10-minute window
 
     steps:
