@@ -10002,3 +10002,5 @@ error,2026-10-13T06:56:53Z,1791874613.241,,,,,,,,,,sales fetch failed: JSONDecod
 error,2026-10-13T07:00:54Z,1791874854.413,,,,,,,,,,sales fetch failed: JSONDecodeError: Expecting value: line 1 column 1 (char 0)
 error,2026-10-13T07:04:55Z,1791875095.690,,,,,,,,,,sales fetch failed: JSONDecodeError: Expecting value: line 1 column 1 (char 0)
 error,2026-10-13T07:08:56Z,1791875336.833,,,,,,,,,,sales fetch failed: JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+error,2026-10-13T07:48:45Z,1791877725.308,,,,,,,,,,sales fetch failed: JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+banner_error,2026-10-13T07:48:45Z,1791877725.308,,,,,,,,,,banner text not found on homepage
