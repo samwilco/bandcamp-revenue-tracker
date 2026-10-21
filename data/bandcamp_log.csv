@@ -11668,3 +11668,5 @@ error,2026-10-21T14:59:00Z,1792594740.114,,,,,,,,,,sales fetch failed: JSONDecod
 error,2026-10-21T15:03:01Z,1792594981.902,,,,,,,,,,sales fetch failed: JSONDecodeError: Expecting value: line 1 column 1 (char 0)
 error,2026-10-21T15:07:03Z,1792595223.777,,,,,,,,,,sales fetch failed: JSONDecodeError: Expecting value: line 1 column 1 (char 0)
 error,2026-10-21T15:11:05Z,1792595465.595,,,,,,,,,,sales fetch failed: JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+error,2026-10-21T15:15:07Z,1792595707.443,,,,,,,,,,sales fetch failed: JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+banner_error,2026-10-21T15:15:07Z,1792595707.443,,,,,,,,,,banner text not found on homepage
