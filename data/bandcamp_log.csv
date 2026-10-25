@@ -12340,3 +12340,4 @@ error,2026-10-25T01:49:34Z,1792892974.859,,,,,,,,,,sales fetch failed: JSONDecod
 gap,2026-10-25T07:41:19Z,1792914079.071,1790904120.000,1792913460.000,,,,,,,,MISSED 2009340 seconds - not recoverable (feed only keeps 10 min)
 sales,2026-10-25T07:41:19Z,1792914079.071,1792913460.000,1792914060.000,166,1313.22,United States,USD,,,,
 banner,2026-10-25T07:41:19Z,1792914079.071,,,,,,,1820000000,88540,"Fans have paid artists $1.82 billion using Bandcamp, and yesterday alone bought 88,540 records.",
+sales,2026-10-25T07:45:21Z,1792914321.308,1792914060.000,1792914300.000,40,384.95,Australia,EUR,,,,
