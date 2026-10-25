@@ -12337,3 +12337,6 @@ error,2026-10-25T01:37:30Z,1792892250.939,,,,,,,,,,sales fetch failed: JSONDecod
 error,2026-10-25T01:41:32Z,1792892492.293,,,,,,,,,,sales fetch failed: JSONDecodeError: Expecting value: line 1 column 1 (char 0)
 error,2026-10-25T01:45:33Z,1792892733.606,,,,,,,,,,sales fetch failed: JSONDecodeError: Expecting value: line 1 column 1 (char 0)
 error,2026-10-25T01:49:34Z,1792892974.859,,,,,,,,,,sales fetch failed: JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+gap,2026-10-25T07:41:19Z,1792914079.071,1790904120.000,1792913460.000,,,,,,,,MISSED 2009340 seconds - not recoverable (feed only keeps 10 min)
+sales,2026-10-25T07:41:19Z,1792914079.071,1792913460.000,1792914060.000,166,1313.22,United States,USD,,,,
+banner,2026-10-25T07:41:19Z,1792914079.071,,,,,,,1820000000,88540,"Fans have paid artists $1.82 billion using Bandcamp, and yesterday alone bought 88,540 records.",
